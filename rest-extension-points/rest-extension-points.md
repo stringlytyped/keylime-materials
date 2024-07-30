@@ -21,7 +21,7 @@ However, attestation and verification is most compelling when done in concert wi
 
 One way of providing such extensibility would be to continue the established Keylime practice of permitting integrations through an HTTP interface, e.g., webhook URIs which are called at various points in the registration and verification lifecycle. This approach has a number of advantages:
 
-- Allows integration with external systems which could be running in separate containers, VMs, or even datacentres, with communication potentially taking place across NAT or firewall boundaries.
+- Allows integration with external systems which could be running in separate containers, VMs, or even data centres, with communication potentially taking place across NAT or firewall boundaries.
 - Integration with processes on the same host are also possible, with HTTP communication taking place over a loopback interface.
 - The external system can be written in any language, run on any OS and hardware, and be implemented using any library available to the developer (whereas Keylime components can only be implemented using those Python libraries packaged by the supported Linux distros).
 - REST-based extension points are easy and quick to implement.
@@ -39,10 +39,9 @@ For these scenarios (and possibly others), we should support a proper plugin fra
 
 Implementing these architectural changes requires work beyond what is considered in this document and should be explored in a separate proposal.
 
+### Extension Points
 
-### Registrar Extension Points
-
-The REST interfaces we should support to enable the above-described extensibility of the registration process are given below:
+The REST interfaces we should support to enable the above-described extensibility are given below:
 
 #### Trust Decisions Webhook
 
@@ -50,64 +49,161 @@ Allows an external web service to provide additional identities (keys and/or cer
 
 This is specified in [more detail in Enhancement 103](https://github.com/keylime/enhancements/blob/master/103_agent-driven-attestation.md#webhook-mechanism-for-custom-trust-decisions).
 
-#### Registration Events Webhook
-
-Notifies an external web service of various events that take place with regard to the agent registrations held by the registrar. These events can be any of the following types:
-
-- **Agent registered**: An agent has registered or re-registered with the registrar.
-- **New agent registered**: A new agent has been added to the registrar.
-- **Agent registration updated**: An existing agent's registration has changed from the previously held registration. Not triggered when certain internal fields change (e.g., when `regcount` increases).
-- **Agent registration deleted**: An agent has been deleted from the registrar.
-- **Final trust decision reached**: The registrar has made a final determination for an agent's registration (as it currently exists) as to whether each of the identities belonging to the agent are deemed trusted and, based on this, whether the agent registration as a whole is trusted. This is called after any calls to the trust decisions webhook and after the agent has successfully passed all challenges need to establish a cryptographic binding between the agent's various identities.
-
-The user can choose which of these events they wish to send to the external service. The data provided in the JSON object sent to the webhook will depend on the specific type of event.
-
-The types of events may be expanded in the future to cover events related to other resources managed by the registrar, e.g., certificates in the trust store.
-
-#### Registration Events Subscription API
-
-Deployments with a large number of attested nodes or where registrations occur frequently will produce a large number of registration events. It could be costly for the registrar to generate notifications for these and for an external web service to handle the notifications. As an alternative, an external service may use the subscription API to declare its interest in receiving notifications only for a specific subset of agents and/or for a specific subset of changes.
-
-This would be done by making a POST request to the events subscription endpoint (`/v3/events/subscriptions`) and providing:
-
-- a list of agent IDs which the service wishes to receive notifications about;
-- a list of fields to notify the service about when they change (can be any field which is exposed when issuing a GET request to `/v3/agents/:id`); and
-- the URI which the registrar should contact when a change occurs which meets the given criteria.
-
-The events subscription API may be expanded in the future to support events related to other resources beyond just agent registrations.
-
-### Verifier Extension Points
-
-The REST interfaces we should support to enable extensibility of how verification is performed are given below:
-
 #### Verification Decisions Webhook
 
-Similar to the registrar's [trust decisions webhook](#trust-decisions-webhook), allows an external service to receive a copy of the evidence proccessed by the verifier, modify the evidence, and/or override decisions about whether the evidence is considered to have verified successfully and/or whether the evidence is deemed authentic.
+Similar to the registrar's [trust decisions webhook](#trust-decisions-webhook), allows an external service to receive a copy of the evidence processed by the verifier, modify the evidence, and/or override decisions about whether the evidence is considered to have verified successfully and/or whether the evidence is deemed authentic.
 
-#### Events Webhook
+#### Events Subscription API
 
-Similar to the [registration events webhook](#registration-events-webhook), allows an external service to receive notifications about certain events. These include:
+Allows an external service to declare its interest in a particular set of events and receive notifications when those events occur. Typically, these would be notifications of resource change events, when a REST resource available through the verifier and registrar APIs is created, updated or deleted. Support for specific resources can be added in a piecemeal fashion over time.
 
-- Agent added
-- Agent updated
-- Agent deleted
-- IMA policy added
-- IMA policy updated
-- IMA policy deleted
-- MB policy added
-- MB policy updated
-- MB policy removed
-- New attestations
+To subscribe to an event, an external service makes a POST request to the events subscription endpoint (`/v3/events/subscriptions`), providing the [events subscription resource](#event-subscription) it wishes to create, for example:
+
+```json
+{
+    "type": "events_subscription",
+    "attributes": {
+        "event_category": "resource_event",
+        "event_type": "resource_created",
+        "resources": ["/agents"],
+        "notify_uri": "https://ext.example.com/notifications"
+    }
+}
+```
+
+This causes notifications to be sent by issuing a POST request to `https://ext.example.com/notifications` each time an agent resource is created. This is an example of such notification:
+
+```json
+{
+    "type": "event_notification",
+    "attributes": {
+        "event_category": "resource_event",
+        "event_type": "resource_created",
+        "resource": "https://registrar.example.com/v3/agents/123",
+        "resource_data": {
+            "agent_id": "123",
+            "aik_tpm": "...",
+            "ek_tpm": "...",
+            "ekcert": "...",
+            "ip": "192.168.0.25",
+            "port": "9002"
+        }
+    }
+}
+```
+
+An events subscription can be deleted by issuing a DELETE request to `/v3/events/subscriptions/:id` where `:id` is the events subscription ID. 
+
+An end user may also use the Keylime tenant CLI to create new events subscriptions.
 
 
-- agents
-- attestations
-- verification result 
+## Events Subscription API Specification
 
+The Events Subscription API conforms to the [JSON:API](https://jsonapi.org/) specification.
 
-### Implementation Considerations
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 
-multiple uris
+### 1. Event Categories and Types
+
+Events are identified by a combination of `event_category` and `event_type`. The values of these members **MUST** adhere to same constraints as a [member name](https://jsonapi.org/format/#document-member-names).
+
+The possible values for `event_category` are as follows (these may be expanded in the future):
+
+- `resource_event`: Events caused by a change to a resource
+- `trust_decision_event`: Events caused in the course of the registrar deciding whether to trust an identity
+- `verification_decision_event`: Events caused in the course of the verifier deciding whether an attestation should pass verification
+
+For a `resource_event`, these are accepted `event_type` values (which may not all be supported for every resource):
+
+- `resource_created`: Events caused by a resource being created
+- `resource_updated`: Events caused by a resource being updated
+- `resource_deleted`: Events caused by a resource being deleted
+
+A `trust_decision_event` or `verification_decision_event` only have a single possible `event_type` value: `final_decision_reached`.
+
+### 2. Events Subscription
+
+An events subscription object **MUST** have the following members:
+
+- `event_category`
+- `event_type`
+- `notify_uri`: The endpoint URI where the external service will receive notifications
+
+Additionally, an events subscription may have additional members depending on the `event_category` and `event_type`:
+
+#### 2.1. Resource Events Subscriptions
+
+An events subscription with an `event_category` of `resource_event` **MUST** have a `resources` member containing an array of resource URIs. These may be relative or absolute URIs, e.g., all the following forms refer to the same resource:
+
+- `https://registrar.example.com/v3/agents/123`
+- `/v3/agents/123`
+- `/agents/123`
+
+The API version, if included, is ignored.
+
+The external service may subscribe to events related to a specific resource, e.g., a specific agent (`/agents/123`), or to a collection of resources, e.g., all agents (`/agents`). The resource being subscribed to does not need to exist at the time that the subscription is created, e.g., an external service can subscribe to `/agents/123` before creation to be notified when agent 123 registers for the first time.
+
+When multiple resource URIs are included in the array, they must all be of the same resource type. For instance, a subscription which includes `/agents/123` and `/policy/456` would be invalid. 
+
+The server **MUST** reject events subscriptions for resources and collections of resources which do not exist in the current API version or which do not currently support events subscriptions.
+
+##### 2.1.1. Resource Updated Subscriptions
+
+An events subscription with an `event_category` of `resource_event` and an `event_type` of `resource_created` **MAY** have a `fields` member containing either an array of strings or the value `all`. When the `fields` member is not present, the value of `all` is assumed. When an array is provided, a notification will only be generated when one of the named fields included in the array change.
+
+#### 2.2. Trust Decision Events Subscriptions
+
+TODO.
+
+#### 2.3. Verification Decision Events Subscriptions
+
+TODO.
+
+### 3. Event Notification
+
+An events notification object **MUST** have the following members:
+
+- `event_category`
+- `event_type`
+- `subscription_id`: The ID of the events subscription which produced the notification
+- `generated_at`: The time at which the notification was generated represented in the ISO 8601 format, in UTC, and with microsecond precision
+
+Additionally, an events notification **MAY** have additional members, depending on the `event_category` and `event_type`:
+
+#### 3.1. Resource Event Notifications
+
+An events notification with an `event_category` of `resource_event` **MUST** have a `resource` member containing the absolute URI of the resource which triggered the event notification (e.g., `/agents/123`).
+
+##### 3.1.1. Resource Created Notifications
+
+An events subscription with an `event_category` of `resource_event` and an `event_type` of `resource_created` **MUST** have a `resource_contents` member with the contents of the newly created resource.
+
+##### 3.1.2. Resource Updated Notifications
+
+An events subscription with an `event_category` of `resource_event` and an `event_type` of `resource_updated` **MUST** have a `resource_contents` member with the new contents of the resource as updated. Additionally, it **MUST** have a `changed_fields` member containing an object with the following structure:
+
+```json
+{
+    "changed_fields": {
+        "ip": {
+            "previous_value": "192.168.0.25",
+            "new_value": "192.168.0.26"
+        }
+    }
+}
+```
+
+##### 3.1.3. Resource Deleted Notifications
+
+An events subscription with an `event_category` of `resource_event` and an `event_type` of `resource_deleted` **MUST** have a `resource_contents` member with the contents of the resource at the time of deletion.
+
+#### 3.2. Trust Decision Event Notifications
+
+TODO.
+
+#### 3.3. Verification Decision Event Notifications
+
+TODO.
 
 
 <br><br>
