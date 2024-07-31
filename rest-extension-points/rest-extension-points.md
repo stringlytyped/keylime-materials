@@ -102,7 +102,7 @@ After creation, an events subscription is located at `/v3/events/subscriptions/:
 
 An end user may also use the Keylime tenant CLI to create and manage events subscriptions.
 
-The details of the events subsciption API are provided in the below [Events Subscription API Specification](#events-subscription-api-specification).
+The details of the events subscription API are provided in the below [Events Subscription API Specification](#events-subscription-api-specification).
 
 
 ## Events Subscription API Specification
