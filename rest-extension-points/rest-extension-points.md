@@ -94,9 +94,11 @@ This causes notifications to be sent by issuing a POST request to `https://ext.e
 }
 ```
 
-An events subscription can be deleted by issuing a DELETE request to `/v3/events/subscriptions/:id` where `:id` is the events subscription ID. 
+After creation, an events subscription is located at `/v3/events/subscriptions/:id` where `:id` is the events subscription ID. Events subscriptions can be managed by issuing GET, POST or DELETE requests to this endpoint.
 
 An end user may also use the Keylime tenant CLI to create new events subscriptions.
+
+The details of the events subsciption API are provided in the below [Events Subscription API Specification](#events-subscription-api-specification).
 
 
 ## Events Subscription API Specification
