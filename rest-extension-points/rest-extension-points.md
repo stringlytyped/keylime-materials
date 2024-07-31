@@ -157,7 +157,7 @@ An events subscription object **MUST** have the following members:
 - `event_type`
 - `notify_uri`: The endpoint URI where the external service will receive notifications
 
-It **MUST** also have a `id` member set to an auto-incrementing integer except when the object represents a new events subscription to be created on the server. In such case, the `id` **MUST NOT** be present in the request to create the subscription.
+It **MUST** also have an `id` member set to an auto-incrementing integer except when the object represents a new events subscription to be created on the server. In such case, the `id` **MUST NOT** be present in the request to create the subscription.
 
 Additionally, an events subscription could have additional members depending on the `event_category` and `event_type`:
 
