@@ -202,7 +202,7 @@ Additionally, an events notification could have additional members, depending on
 
 #### 4.1. Resource Event Notifications
 
-An events notification with an `event_category` of `resource_event` **MUST** have a `resource` member containing the absolute URI of the resource which triggered the event notification (e.g., `/agents/123`).
+An events notification with an `event_category` of `resource_event` **MUST** have a `resource` member containing the absolute URI of the resource which triggered the event notification (e.g., `https://registrar.example.com/v3/agents/123`).
 
 ##### 4.1.1. Resource Created Notifications
 
