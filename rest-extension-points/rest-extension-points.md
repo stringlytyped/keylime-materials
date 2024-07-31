@@ -79,6 +79,7 @@ This causes notifications to be sent by issuing a POST request to `https://ext.e
     "attributes": {
         "event_category": "resource_event",
         "event_type": "resource_created",
+        "subscription_id": "541",
         "resource": "https://registrar.example.com/v3/agents/123",
         "resource_data": {
             "agent_id": "123",
@@ -87,7 +88,8 @@ This causes notifications to be sent by issuing a POST request to `https://ext.e
             "ekcert": "...",
             "ip": "192.168.0.25",
             "port": "9002"
-        }
+        },
+        "generated_at": "2024-07-31T14:30:19.567621"
     }
 }
 ```
@@ -166,7 +168,7 @@ An events notification object **MUST** have the following members:
 - `event_category`
 - `event_type`
 - `subscription_id`: The ID of the events subscription which produced the notification
-- `generated_at`: The time at which the notification was generated represented in the ISO 8601 format, in UTC, and with microsecond precision
+- `generated_at`: The UTC time at which the notification was generated represented in the ISO 8601 format and with microsecond precision
 
 Additionally, an events notification **MAY** have additional members, depending on the `event_category` and `event_type`:
 
