@@ -57,16 +57,18 @@ Similar to the registrar's [trust decisions webhook](#trust-decisions-webhook), 
 
 Allows an external service to declare its interest in a particular set of events and receive notifications when those events occur. Typically, these would be notifications of resource change events, when a REST resource available through the verifier and registrar APIs is created, updated or deleted. Support for specific resources can be added in a piecemeal fashion over time.
 
-To subscribe to an event, an external service makes a POST request to the events subscription endpoint (`/v3/events/subscriptions`), providing the [events subscription resource](#event-subscription) it wishes to create, for example:
+To subscribe to an event, an external service makes a POST request to the events subscription endpoint (`/v3/events/subscriptions`), providing the events subscription resource it wishes to create, for example:
 
 ```json
 {
-    "type": "events_subscription",
-    "attributes": {
-        "event_category": "resource_event",
-        "event_type": "resource_created",
-        "resources": ["/agents"],
-        "notify_uri": "https://ext.example.com/notifications"
+    "data": {
+        "type": "events_subscription",
+        "attributes": {
+            "event_category": "resource_event",
+            "event_type": "resource_created",
+            "resources": ["/agents"],
+            "notify_uri": "https://ext.example.com/notifications"
+        }
     }
 }
 ```
@@ -75,21 +77,23 @@ This causes notifications to be sent by issuing a POST request to `https://ext.e
 
 ```json
 {
-    "type": "event_notification",
-    "attributes": {
-        "event_category": "resource_event",
-        "event_type": "resource_created",
-        "subscription_id": "541",
-        "resource": "https://registrar.example.com/v3/agents/123",
-        "resource_data": {
-            "agent_id": "123",
-            "aik_tpm": "...",
-            "ek_tpm": "...",
-            "ekcert": "...",
-            "ip": "192.168.0.25",
-            "port": "9002"
-        },
-        "generated_at": "2024-07-31T14:30:19.567621"
+    "data": {
+        "type": "event_notification",
+        "attributes": {
+            "event_category": "resource_event",
+            "event_type": "resource_created",
+            "subscription_id": "541",
+            "resource": "https://registrar.example.com/v3/agents/123",
+            "resource_data": {
+                "agent_id": "123",
+                "aik_tpm": "...",
+                "ek_tpm": "...",
+                "ekcert": "...",
+                "ip": "192.168.0.25",
+                "port": "9002"
+            },
+            "generated_at": "2024-07-31T14:30:19.567621"
+        }
     }
 }
 ```
