@@ -179,7 +179,7 @@ The server **MUST** reject events subscriptions for resources and collections of
 
 ##### 3.1.1. Resource Updated Subscriptions
 
-An events subscription with an `event_category` of `resource_event` and an `event_type` of `resource_created` **MAY** have a `fields` member containing either an array of strings or the value `all`. When the `fields` member is not present, the value of `all` is assumed. When an array is provided, a notification will only be generated when one of the named fields included in the array change.
+An events subscription with an `event_category` of `resource_event` and an `event_type` of `resource_updated` **MAY** have a `fields` member containing either an array of strings or the value `all`. When the `fields` member is not present, the value of `all` is assumed. When an array is provided, a notification will only be generated when one of the named fields included in the array change.
 
 #### 3.2. Trust Decision Events Subscriptions
 
