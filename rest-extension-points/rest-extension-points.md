@@ -119,13 +119,13 @@ Endpoints for managing events subscriptions should be supported by both the regi
 - `PUT /v3/events/subscriptions/:id`: Updates the details of a specific events subscription
 - `DELETE /v3/events/subscriptions/:id`: Deletes a specific events subscription
 
-In all cases, when a request succeeds, the response issued by the server **MUST** adhere to the JSON:API [top-level document structure](https://jsonapi.org/format/#document-top-level) with the top-level `data` member set to an [events subscriptions object](#events-subscriptions-object). The one exception is replies produced as a result of a successful GET request to `/v3/events/subscriptions/` which **MUST** contain a `data` member with an array of [events subscriptions objects](#events-subscriptions-object).
+In all cases, when a request succeeds, the response issued by the server **MUST** adhere to the JSON:API [top-level document structure](https://jsonapi.org/format/#document-top-level) with the top-level `data` member set to an [events subscriptions object](#3-events-subscriptions-object). The one exception is replies produced as a result of a successful GET request to `/v3/events/subscriptions/` which **MUST** contain a `data` member with an array of [events subscriptions objects](#3-events-subscriptions-object).
 
-POST and PUT requests to create or update an events subscription **MUST** contain a JSON payload in the request body which adheres to the JSON:API [top-level document structure](https://jsonapi.org/format/#document-top-level) with the top-level `data` member set to an [events subscriptions object](#events-subscriptions-object).
+POST and PUT requests to create or update an events subscription **MUST** contain a JSON payload in the request body which adheres to the JSON:API [top-level document structure](https://jsonapi.org/format/#document-top-level) with the top-level `data` member set to an [events subscriptions object](#3-events-subscriptions-object).
 
 #### 1.2. External Service Endpoints
 
-An external service which wishes to receive events notifications can have any number of events notification endpoints. These endpoints **MUST** all accept POST requests containing a JSON payload in the request body which adheres to the JSON:API [top-level document structure](https://jsonapi.org/format/#document-top-level) with the top-level `data` member set to an [event notification object](#event-notification-object).
+An external service which wishes to receive events notifications can have any number of events notification endpoints. These endpoints **MUST** all accept POST requests containing a JSON payload in the request body which adheres to the JSON:API [top-level document structure](https://jsonapi.org/format/#document-top-level) with the top-level `data` member set to an [event notification object](#4-event-notification-object).
 
 ### 2. Event Categories and Types
 
