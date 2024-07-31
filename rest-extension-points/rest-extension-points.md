@@ -105,7 +105,27 @@ The Events Subscription API conforms to the [JSON:API](https://jsonapi.org/) spe
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 
-### 1. Event Categories and Types
+### 1. API Endpoints
+
+#### 1.1. Management APIs
+
+Endpoints for managing events subscriptions should be supported by both the registrar and the verifier, namely:
+
+- `GET /v3/events/subscriptions/`: Retrieves a list of all active events subscriptions on the server
+- `POST /v3/events/subscriptions/`: Creates a new events subscription
+- `GET /v3/events/subscriptions/:id`: Gets the details of a specific events subscription
+- `PUT /v3/events/subscriptions/:id`: Updates the details of a specific events subscription
+- `DELETE /v3/events/subscriptions/:id`: Deletes a specific events subscription
+
+In all cases, when a request succeeds, the response issued by the server **MUST** adhere to the JSON:API [top-level document structure](https://jsonapi.org/format/#document-top-level) with the top-level `data` member set to an [events subscriptions object](#events-subscriptions-object). The one exception is replies produced as a result of a successful GET request to `/v3/events/subscriptions/` which **MUST** contain a `data` member with an array of [events subscriptions objects](#events-subscriptions-object).
+
+POST and PUT requests to create or update an events subscription **MUST** contain a JSON payload in the request body which adheres to the JSON:API [top-level document structure](https://jsonapi.org/format/#document-top-level) with the top-level `data` member set to an [events subscriptions object](#events-subscriptions-object).
+
+#### 1.2. External Service Endpoints
+
+An external service which wishes to receive events notifications can have any number of events notification endpoints. These endpoints **MUST** all accept POST requests containing a JSON payload in the request body which adheres to the JSON:API [top-level document structure](https://jsonapi.org/format/#document-top-level) with the top-level `data` member set to an [event notification object](#event-notification-object).
+
+### 2. Event Categories and Types
 
 Events are identified by a combination of `event_category` and `event_type`. The values of these members **MUST** adhere to same constraints as a [member name](https://jsonapi.org/format/#document-member-names).
 
@@ -123,7 +143,7 @@ For a `resource_event`, these are accepted `event_type` values (which may not al
 
 A `trust_decision_event` or `verification_decision_event` only have a single possible `event_type` value: `final_decision_reached`.
 
-### 2. Events Subscription
+### 3. Events Subscriptions Object
 
 An events subscription object **MUST** have the following members:
 
@@ -131,9 +151,11 @@ An events subscription object **MUST** have the following members:
 - `event_type`
 - `notify_uri`: The endpoint URI where the external service will receive notifications
 
-Additionally, an events subscription may have additional members depending on the `event_category` and `event_type`:
+It **MUST** also have a `id` member set to an auto-incrementing integer except when the object represents a new events subscription to be created on the server. In such case, the `id` **MUST NOT** be present in the request to create the subscription.
 
-#### 2.1. Resource Events Subscriptions
+Additionally, an events subscription could have additional members depending on the `event_category` and `event_type`:
+
+#### 3.1. Resource Events Subscriptions
 
 An events subscription with an `event_category` of `resource_event` **MUST** have a `resources` member containing an array of resource URIs. These may be relative or absolute URIs, e.g., all the following forms refer to the same resource:
 
@@ -145,42 +167,42 @@ The API version, if included, is ignored.
 
 The external service may subscribe to events related to a specific resource, e.g., a specific agent (`/agents/123`), or to a collection of resources, e.g., all agents (`/agents`). The resource being subscribed to does not need to exist at the time that the subscription is created, e.g., an external service can subscribe to `/agents/123` before creation to be notified when agent 123 registers for the first time.
 
-When multiple resource URIs are included in the array, they must all be of the same resource type. For instance, a subscription which includes `/agents/123` and `/policy/456` would be invalid. 
+When multiple resource URIs are included in the array, they **MUST** all be of the same resource type. For instance, a subscription which includes `/agents/123` and `/policy/456` would be invalid. 
 
 The server **MUST** reject events subscriptions for resources and collections of resources which do not exist in the current API version or which do not currently support events subscriptions.
 
-##### 2.1.1. Resource Updated Subscriptions
+##### 3.1.1. Resource Updated Subscriptions
 
 An events subscription with an `event_category` of `resource_event` and an `event_type` of `resource_created` **MAY** have a `fields` member containing either an array of strings or the value `all`. When the `fields` member is not present, the value of `all` is assumed. When an array is provided, a notification will only be generated when one of the named fields included in the array change.
 
-#### 2.2. Trust Decision Events Subscriptions
+#### 3.2. Trust Decision Events Subscriptions
 
 TODO.
 
-#### 2.3. Verification Decision Events Subscriptions
+#### 3.3. Verification Decision Events Subscriptions
 
 TODO.
 
-### 3. Event Notification
+### 4. Event Notification Object
 
 An events notification object **MUST** have the following members:
 
 - `event_category`
 - `event_type`
 - `subscription_id`: The ID of the events subscription which produced the notification
-- `generated_at`: The UTC time at which the notification was generated represented in the ISO 8601 format and with microsecond precision
+- `generated_at`: The UTC time at which the notification was generated represented in the ISO 8601 format with microsecond precision
 
-Additionally, an events notification **MAY** have additional members, depending on the `event_category` and `event_type`:
+Additionally, an events notification could have additional members, depending on the `event_category` and `event_type`:
 
-#### 3.1. Resource Event Notifications
+#### 4.1. Resource Event Notifications
 
 An events notification with an `event_category` of `resource_event` **MUST** have a `resource` member containing the absolute URI of the resource which triggered the event notification (e.g., `/agents/123`).
 
-##### 3.1.1. Resource Created Notifications
+##### 4.1.1. Resource Created Notifications
 
 An events subscription with an `event_category` of `resource_event` and an `event_type` of `resource_created` **MUST** have a `resource_contents` member with the contents of the newly created resource.
 
-##### 3.1.2. Resource Updated Notifications
+##### 4.1.2. Resource Updated Notifications
 
 An events subscription with an `event_category` of `resource_event` and an `event_type` of `resource_updated` **MUST** have a `resource_contents` member with the new contents of the resource as updated. Additionally, it **MUST** have a `changed_fields` member containing an object with the following structure:
 
@@ -195,15 +217,15 @@ An events subscription with an `event_category` of `resource_event` and an `even
 }
 ```
 
-##### 3.1.3. Resource Deleted Notifications
+##### 4.1.3. Resource Deleted Notifications
 
 An events subscription with an `event_category` of `resource_event` and an `event_type` of `resource_deleted` **MUST** have a `resource_contents` member with the contents of the resource at the time of deletion.
 
-#### 3.2. Trust Decision Event Notifications
+#### 4.2. Trust Decision Event Notifications
 
 TODO.
 
-#### 3.3. Verification Decision Event Notifications
+#### 4.3. Verification Decision Event Notifications
 
 TODO.
 
