@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="0; url={{ page.destination }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page.title }}</title>
+
+  <script>
+    window.location.href = "{{ page.destination }}"
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    main {
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 20px 30px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+    }
+
+    a:link, a:visited {
+      color: rgb(0, 102, 204);
+    }
+  </style>
+</head>
+
+<body>
+
+  <main>
+    <h1>{{ page.title }}</h1>
+    <p>If you are not redirected to the document automatically, follow the below link:</p>
+    <p><a href="{{ page.destination }}">{{ page.destination }}</a></p>
+
+    {{ content }}
+  </main>
+
+</body>
+
+</html>
