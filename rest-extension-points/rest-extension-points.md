@@ -1,5 +1,7 @@
 # REST Extension Points for Keylime
 
+Permalink to latest version: https://stringlytyped.github.io/keylime-materials/rest-extension-points/
+
 ## Background
 
 [Keylime](https://github.com/keylime/keylime) currently performs registration and verification in a fairly fixed way. This means that, to a large degree, only those use cases which have been envisioned by the Keylime community are supported, unless one modifies Keylime source code.
